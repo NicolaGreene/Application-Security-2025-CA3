@@ -146,11 +146,15 @@ include 'includes/wallet.php';
 								<li><a href="orders.php">All Orders</a>
                                 </li>
 								<?php
-									$sql = mysqli_query($con, "SELECT DISTINCT status FROM orders WHERE customer_id = $user_id;");
+									$stmt = $con->prepare("SELECT DISTINCT status FROM orders WHERE customer_id = ?");
+									$stmt->bind_param("i", $user_id);
+									$stmt->execute();
+									$sql = $stmt->get_result();
 									while($row = mysqli_fetch_array($sql)){
-                                    echo '<li><a href="orders.php?status='.$row['status'].'">'.$row['status'].'</a>
+                                    echo '<li><a href="orders.php?status='.urlencode($row['status']).'">'.$row['status'].'</a>
                                     </li>';
 									}
+									$stmt->close();
 									?>
                                 </ul>
                             </div>
@@ -169,14 +173,18 @@ include 'includes/wallet.php';
 									"><a href="tickets.php">All Tickets</a>
                                 </li>
 								<?php
-									$sql = mysqli_query($con, "SELECT DISTINCT status FROM tickets WHERE poster_id = $user_id AND not deleted;");
+									$stmt = $con->prepare("SELECT DISTINCT status FROM tickets WHERE poster_id = ? AND deleted = 0");
+									$stmt->bind_param("i", $user_id);
+									$stmt->execute();
+									$sql = $stmt->get_result();
 									while($row = mysqli_fetch_array($sql)){
 									if(isset($_GET['status'])){
 										$status = $row['status'];
 									}
-                                    echo '<li class='.(isset($_GET['status'])?($status == $_GET['status'] ? 'active' : ''): '').'><a href="tickets.php?status='.$row['status'].'">'.$row['status'].'</a>
+                                    echo '<li class='.(isset($_GET['status'])?($status == $_GET['status'] ? 'active' : ''): '').'><a href="tickets.php?status='.urlencode($row['status']).'">'.$row['status'].'</a>
                                     </li>';
 									}
+									$stmt->close();
 									?>
                                 </ul>
                             </div>
@@ -283,22 +291,26 @@ include 'includes/wallet.php';
 									else{
 										$status = '%';
 									}			
-									$sql = mysqli_query($con, "SELECT * FROM tickets WHERE poster_id = $user_id AND status LIKE '$status' AND not deleted;");
-									while($row = mysqli_fetch_array($sql)){								                                
-									echo'<a href="view-ticket.php?id='.$row['id'].'"class="collection-item">
+									$stmt = $con->prepare("SELECT * FROM tickets WHERE poster_id = ? AND status LIKE ? AND deleted = 0");
+									$stmt->bind_param("is", $user_id, $status);
+									$stmt->execute();
+									$sql = $stmt->get_result();
+									while($row = $sql->fetch_array()){								                                
+									echo'<a href="view-ticket.php?id='.htmlspecialchars($row['id']).'"class="collection-item">
                                         <div class="row">
                                             <div class="col s6">
-                                                <p class="collections-title">'.$row['subject'].'</p>                                              
+                                                <p class="collections-title">'.htmlspecialchars($row['subject']).'</p>                                              
                                             </div>
                                             <div class="col s2">
-                                            <span class="task-cat cyan">'.$row['status'].'</span></div>											
+                                            <span class="task-cat cyan">'.htmlspecialchars($row['status']).'</span></div>											
                                             <div class="col s2">
-                                            <span class="task-cat grey darken-3">'.$row['type'].'</span></div>
+                                            <span class="task-cat grey darken-3">'.htmlspecialchars($row['type']).'</span></div>
                                             <div class="col s2">
-                                            <span class="badge">'.$row['date'].'</span></div>
+                                            <span class="badge">'.htmlspecialchars($row['date']).'</span></div>
                                         </div>
                                     </a>';
 									}
+									$stmt->close();
 									?>
 									</ul>
 									</div>

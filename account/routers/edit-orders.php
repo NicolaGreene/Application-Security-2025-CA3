@@ -1,10 +1,12 @@
 <?php
 include '../includes/connect.php';
 $status = $_POST['status'];
-$id = $_POST['id'];
+$id = (int)$_POST['id'];
 
-$sql = "UPDATE orders SET status='$status' WHERE id=$id;";
-$con->query($sql);
+$stmt = $con->prepare("UPDATE orders SET status = ? WHERE id = ?");
+$stmt->bind_param("si", $status, $id);
+$stmt->execute();
+$stmt->close();
 
 header("location: ../all-orders.php");
 ?>

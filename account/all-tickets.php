@@ -103,11 +103,14 @@ include 'includes/wallet.php';
 								<li><a href="all-orders.php">All Orders</a>
                                 </li>
 								<?php
-									$sql = mysqli_query($con, "SELECT DISTINCT status FROM orders;");
+									$stmt = $con->prepare("SELECT DISTINCT status FROM orders");
+									$stmt->execute();
+									$sql = $stmt->get_result();
 									while($row = mysqli_fetch_array($sql)){
-                                    echo '<li><a href="all-orders.php?status='.$row['status'].'">'.$row['status'].'</a>
+                                    echo '<li><a href="all-orders.php?status='.urlencode($row['status']).'">'.$row['status'].'</a>
                                     </li>';
 									}
+									$stmt->close();
 									?>
                                 </ul>
                             </div>
@@ -126,14 +129,17 @@ include 'includes/wallet.php';
 									"><a href="all-tickets.php">All Tickets</a>
                                 </li>
 								<?php
-									$sql = mysqli_query($con, "SELECT DISTINCT status FROM tickets;");
+									$stmt = $con->prepare("SELECT DISTINCT status FROM tickets");
+									$stmt->execute();
+									$sql = $stmt->get_result();
 									while($row = mysqli_fetch_array($sql)){
 									if(isset($_GET['status'])){
 										$status = $row['status'];
 									}
-                                    echo '<li class='.(isset($_GET['status'])?($status == $_GET['status'] ? 'active' : ''): '').'><a href="all-tickets.php?status='.$row['status'].'">'.$row['status'].'</a>
+                                    echo '<li class='.(isset($_GET['status'])?($status == $_GET['status'] ? 'active' : ''): '').'><a href="all-tickets.php?status='.urlencode($row['status']).'">'.$row['status'].'</a>
                                     </li>';
 									}
+									$stmt->close();
 									?>
                                 </ul>
                             </div>
@@ -177,22 +183,26 @@ include 'includes/wallet.php';
 									else{
 										$status = '%';
 									}			
-									$sql = mysqli_query($con, "SELECT * FROM tickets WHERE status LIKE '$status';");
-									while($row = mysqli_fetch_array($sql)){								                                
-									echo'<a href="view-ticket-admin.php?id='.$row['id'].'"class="collection-item">
+									$stmt = $con->prepare("SELECT * FROM tickets WHERE status LIKE ?");
+									$stmt->bind_param("s", $status);
+									$stmt->execute();
+									$sql = $stmt->get_result();
+									while($row = $sql->fetch_array()){								                                
+									echo'<a href="view-ticket-admin.php?id='.htmlspecialchars($row['id']).'"class="collection-item">
                                         <div class="row">
                                             <div class="col s6">
-                                                <p class="collections-title">'.$row['subject'].'</p>                                              
+                                                <p class="collections-title">'.htmlspecialchars($row['subject']).'</p>                                              
                                             </div>
                                             <div class="col s2">
-                                            <span class="task-cat cyan">'.$row['status'].'</span></div>											
+                                            <span class="task-cat cyan">'.htmlspecialchars($row['status']).'</span></div>											
                                             <div class="col s2">
-                                            <span class="task-cat grey darken-3">'.$row['type'].'</span></div>
+                                            <span class="task-cat grey darken-3">'.htmlspecialchars($row['type']).'</span></div>
                                             <div class="col s2">
-                                            <span class="badge">'.$row['date'].'</span></div>
+                                            <span class="badge">'.htmlspecialchars($row['date']).'</span></div>
                                         </div>
                                     </a>';
 									}
+									$stmt->close();
 									?>
 									</ul>
 									</div>

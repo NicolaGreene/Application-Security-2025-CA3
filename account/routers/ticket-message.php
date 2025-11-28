@@ -1,20 +1,30 @@
 <?php
 include '../includes/connect.php';
 include '../includes/wallet.php';
-$message = htmlspecialchars($_POST['message']);
-$ticket_id = $_POST['ticket_id'];
+$message = $_POST['message'];
+$ticket_id = (int)$_POST['ticket_id'];
 $role = $_POST['role'];
+
 if($role == 'Administrator'){
-	$sql = "UPDATE tickets SET status = 'Answered' WHERE id=$ticket_id;";
-	$con->query($sql);
+	$status = 'Answered';
+	$stmt = $con->prepare("UPDATE tickets SET status = ? WHERE id = ?");
+	$stmt->bind_param("si", $status, $ticket_id);
+	$stmt->execute();
+	$stmt->close();
 }
 else{
-	$sql = "UPDATE tickets SET status = 'Open' WHERE id=$ticket_id;";
-	$con->query($sql);	
+	$status = 'Open';
+	$stmt = $con->prepare("UPDATE tickets SET status = ? WHERE id = ?");
+	$stmt->bind_param("si", $status, $ticket_id);
+	$stmt->execute();
+	$stmt->close();
 }
+
 if($message != ''){
-	$sql = "INSERT INTO ticket_details (ticket_id, user_id, description) VALUES ($ticket_id, $user_id, '$message')";
-	$con->query($sql);
+	$stmt = $con->prepare("INSERT INTO ticket_details (ticket_id, user_id, description) VALUES (?, ?, ?)");
+	$stmt->bind_param("iis", $ticket_id, $user_id, $message);
+	$stmt->execute();
+	$stmt->close();
 }
-header("location: ../view-ticket.php?id=".$ticket_id);
+header("location: ../view-ticket.php?id=".urlencode($ticket_id));
 ?>

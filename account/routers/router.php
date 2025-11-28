@@ -5,7 +5,10 @@ $success=false;
 $username = $_POST['username'];
 $password = $_POST['password'];
 
-$result = mysqli_query($con, "SELECT * FROM users WHERE username='$username' AND password='$password' AND role='Administrator' AND not deleted;");
+$stmt = $con->prepare("SELECT * FROM users WHERE username = ? AND password = ? AND role = 'Administrator' AND deleted = 0");
+$stmt->bind_param("ss", $username, $password);
+$stmt->execute();
+$result = $stmt->get_result();
 while($row = mysqli_fetch_array($result))
 {
 	$success = true;
@@ -13,6 +16,8 @@ while($row = mysqli_fetch_array($result))
 	$name = $row['name'];
 	$role= $row['role'];
 }
+$stmt->close();
+
 if($success == true)
 {	
 	session_start();
@@ -25,14 +30,19 @@ if($success == true)
 }
 else
 {
-	$result = mysqli_query($con, "SELECT * FROM users WHERE username='$username' AND password='$password' AND role='Customer' AND not deleted;");
+	$stmt = $con->prepare("SELECT * FROM users WHERE username = ? AND password = ? AND role = 'Customer' AND deleted = 0");
+	$stmt->bind_param("ss", $username, $password);
+	$stmt->execute();
+	$result = $stmt->get_result();
 	while($row = mysqli_fetch_array($result))
 	{
-	$success = true;
-	$user_id = $row['id'];
-	$name = $row['name'];
-	$role= $row['role'];
+		$success = true;
+		$user_id = $row['id'];
+		$name = $row['name'];
+		$role= $row['role'];
 	}
+	$stmt->close();
+	
 	if($success == true)
 	{
 		session_start();

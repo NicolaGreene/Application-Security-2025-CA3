@@ -4,19 +4,23 @@ include 'includes/wallet.php';
 $continue=0;
 if($_SESSION['customer_sid']==session_id())
 {
-		$ticket_id = $_GET['id'];
-		$sql1 = "SELECT * FROM tickets where poster_id = $user_id AND id = $ticket_id AND not deleted;";
-		if(mysqli_num_rows(mysqli_query($con,$sql1))>0){
-			$row  = $con->query($sql1)->fetch_assoc();
-			$type = $row['type'];
-			$subject = $row['subject'];
-			$description = $row['description'];
-			$date = $row['date'];
-			$status = $row['status'];
-			$continue=1;
-		}
-		else
-			$continue = 0;	
+	$ticket_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+	$stmt = $con->prepare("SELECT * FROM tickets WHERE poster_id = ? AND id = ? AND deleted = 0");
+	$stmt->bind_param("ii", $user_id, $ticket_id);
+	$stmt->execute();
+	$res = $stmt->get_result();
+	if($res->num_rows > 0){
+		$row = $res->fetch_assoc();
+		$type = $row['type'];
+		$subject = $row['subject'];
+		$description = $row['description'];
+		$date = $row['date'];
+		$status = $row['status'];
+		$continue=1;
+	}
+	else
+		$continue = 0;	
+	$stmt->close();
 }
 if($continue){
 ?>
@@ -29,7 +33,7 @@ if($continue){
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="msapplication-tap-highlight" content="no">
-  <title>Ticket No. <?php echo $ticket_id.' - '. $type;?></title>
+  <title>Ticket No. <?php echo htmlspecialchars($ticket_id).' - '. htmlspecialchars($type);?></title>
 
   <!-- Favicons-->
   <link rel="icon" href="images/favicon/favicon-32x32.png" sizes="32x32">
@@ -225,14 +229,14 @@ if($continue){
 								echo '<ul id="task-card" class="collection with-header">
 									<div id="card-alert" class="card cyan">
 										<div class="card-content white-text">
-										<span class="card-title white-text darken-1">Ticket No. '.$ticket_id.'</span>
-										<p><strong>Subject: </strong>'.$subject.'</p>
-										<p><strong>Status: </strong>'.$status.'</p>	
-										<p><strong>Type: </strong>'.$type.'</p>											
+										<span class="card-title white-text darken-1">Ticket No. '.htmlspecialchars($ticket_id).'</span>
+										<p><strong>Subject: </strong>'.htmlspecialchars($subject).'</p>
+										<p><strong>Status: </strong>'.htmlspecialchars($status).'</p>	
+										<p><strong>Type: </strong>'.htmlspecialchars($type).'</p>											
 										</div>
 										<div class="card-action cyan">
 										<form method="post" action="routers/ticket-status.php">
-										<input type="hidden" name="ticket_id" value="'.$ticket_id.'">										
+										<input type="hidden" name="ticket_id" value="'.htmlspecialchars($ticket_id).'">									
 										<input type="hidden" name="status" value="'.($status != 'Closed' ? 'Closed' : 'Open').'">
 										<button class="waves-effect waves-light deep-orange btn white-text" type="submit" name="action">'
 										.($status != 'Closed' ? 'Close<i class="mdi-navigation-close"></i>' : 'Reopen<i class="mdi-navigation-check"></i>').'
@@ -242,29 +246,37 @@ if($continue){
 									</div>										
                                 </ul>';
 								echo '<ul id="issues-collection" class="collection">';
-								$sql1 = mysqli_query($con, "SELECT * from ticket_details WHERE ticket_id = $ticket_id;");
-								while($row1 = mysqli_fetch_array($sql1)){
-									$sql2 = "SELECT * FROM users WHERE id = ".$row1['user_id'].";";
-									if(mysqli_num_rows(mysqli_query($con,$sql2))>0){
-										$row2  = $con->query($sql2)->fetch_assoc();
-										$name = $row2['name'];
+								$stmt = $con->prepare("SELECT * FROM ticket_details WHERE ticket_id = ?");
+								$stmt->bind_param("i", $ticket_id);
+								$stmt->execute();
+								$sql1 = $stmt->get_result();
+								while($row1 = $sql1->fetch_array()){
+									$stmt2 = $con->prepare("SELECT * FROM users WHERE id = ?");
+									$stmt2->bind_param("i", $row1['user_id']);
+									$stmt2->execute();
+									$res2 = $stmt2->get_result();
+									if($res2->num_rows > 0){
+										$row2 = $res2->fetch_assoc();
+										$user_name = $row2['name'];
 										$role1 = $row2['role'];										
 									}
+									$stmt2->close();
 								  echo '
 								  <li class="collection-item avatar">
 									  <i class="'.($role1=='Administrator' ? 'mdi-action-star-rate' : 'mdi-social-person').' cyan circle"></i>
-									  <span class="collection-header"> '.$name.'</span>
-									  <p><strong>Date:</strong> '.$row1['date'].'</p>
-									  <p><strong>Role:</strong> '.$role1.'</p>					                               
+									  <span class="collection-header"> '.htmlspecialchars($user_name).'</span>
+									  <p><strong>Date:</strong> '.htmlspecialchars($row1['date']).'</p>
+									  <p><strong>Role:</strong> '.htmlspecialchars($role1).'</p>					                               
 									  <a href="#" class="secondary-content">
 									  <i class="mdi-action-grade"></i></a>
 								  </li>
 								  <li class="collection-item">
 									  <div class="row">
-									  <p class="caption">'.$row1['description'].'</p>
+									  <p class="caption">'.htmlspecialchars($row1['description']).'</p>
 									  </div>
 									  </li>';
 								}
+								$stmt->close();
 							  echo '</ul>';
 							  if($status != 'Closed'){
 							  echo '
@@ -272,8 +284,8 @@ if($continue){
                   <div class="row">
                     <form class="formValidate" id="formValidate" method="post" action="routers/ticket-message.php" novalidate="novalidate" class="col s12">					  
                       <div class="row">
-					  <input type="hidden" name="role" value="'.$role.'">
-					  <input type="hidden" name="ticket_id" value="'.$ticket_id.'">
+					  <input type="hidden" name="role" value="'.htmlspecialchars($role).'">
+					  <input type="hidden" name="ticket_id" value="'.htmlspecialchars($ticket_id).'">
                         <div class="input-field col s12">
                           <i class="mdi-action-home prefix"></i>
                           <textarea name="message" id="message" class="materialize-textarea validate" data-error=".errorTxt1"></textarea>
@@ -379,7 +391,7 @@ if($continue){
 	{
 		if($_SESSION['admin_sid']==session_id())
 		{
-			header("location:view-ticket-admin.php?id=".$_GET['id']);		
+			header("location:view-ticket-admin.php?id=".urlencode($_GET['id']));		
 		}
 		else{
 			header("location:login.php");
