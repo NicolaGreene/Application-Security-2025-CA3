@@ -108,12 +108,15 @@ include 'includes/wallet.php';
 									"><a href="orders.php">All Orders</a>
                                 </li>
 								<?php
-									$sql = mysqli_query($con, "SELECT DISTINCT status FROM orders  WHERE customer_id = $user_id;;");
+									$stmt = $con->prepare("SELECT DISTINCT status FROM orders WHERE customer_id = ?");
+									$stmt->bind_param("i", $user_id);
+									$stmt->execute();
+									$sql = $stmt->get_result();
 									while($row = mysqli_fetch_array($sql)){
 									if(isset($_GET['status'])){
 										$status = $row['status'];
 									}
-                                    echo '<li class='.(isset($_GET['status'])?($status == $_GET['status'] ? 'active' : ''): '').'><a href="orders.php?status='.$row['status'].'">'.$row['status'].'</a>
+                                    echo '<li class='.(isset($_GET['status'])?($status == $_GET['status'] ? 'active' : ''): '').'><a href="orders.php?status='.urlencode($row['status']).'">'.$row['status'].'</a>
                                     </li>';
 									}
 									?>
@@ -130,9 +133,12 @@ include 'includes/wallet.php';
 								<li><a href="tickets.php">All Tickets</a>
                                 </li>
 								<?php
-									$sql = mysqli_query($con, "SELECT DISTINCT status FROM tickets WHERE poster_id = $user_id AND not deleted;");
-									while($row = mysqli_fetch_array($sql)){
-                                    echo '<li><a href="tickets.php?status='.$row['status'].'">'.$row['status'].'</a>
+									$stmt_tickets = $con->prepare("SELECT DISTINCT status FROM tickets WHERE poster_id = ? AND deleted = 0");
+									$stmt_tickets->bind_param("i", $user_id);
+									$stmt_tickets->execute();
+									$sql_tickets = $stmt_tickets->get_result();
+									while($row = mysqli_fetch_array($sql_tickets)){
+                                    echo '<li><a href="tickets.php?status='.urlencode($row['status']).'">'.$row['status'].'</a>
                                     </li>';
 									}
 									?>
@@ -180,47 +186,57 @@ include 'includes/wallet.php';
 					else{
 						$status = '%';
 					}
-					$sql = mysqli_query($con, "SELECT * FROM orders WHERE customer_id = $user_id AND status LIKE '$status';;");
+					$stmt_orders = $con->prepare("SELECT * FROM orders WHERE customer_id = ? AND status LIKE ?");
+					$stmt_orders->bind_param("is", $user_id, $status);
+					$stmt_orders->execute();
+					$sql = $stmt_orders->get_result();
 					echo '              <div class="row">
                 <div>
                     <h4 class="header">List</h4>
                     <ul id="issues-collection" class="collection">';
-					while($row = mysqli_fetch_array($sql))
+					while($row = $sql->fetch_array())
 					{
 						$status = $row['status'];
 						echo '<li class="collection-item avatar">
                               <i class="mdi-content-content-paste red circle"></i>
-                              <span class="collection-header">Order No. '.$row['id'].'</span>
-                              <p><strong>Date:</strong> '.$row['date'].'</p>
-                              <p><strong>Payment Type:</strong> '.$row['payment_type'].'</p>
-							  <p><strong>Address: </strong>'.$row['address'].'</p>							  
-                              <p><strong>Status:</strong> '.($status=='Paused' ? 'Paused <a  data-position="bottom" data-delay="50" data-tooltip="Please contact administrator for further details." class="btn-floating waves-effect waves-light tooltipped cyan">    ?</a>' : $status).'</p>							  
-							  '.(!empty($row['description']) ? '<p><strong>Note: </strong>'.$row['description'].'</p>' : '').'						                               
+                              <span class="collection-header">Order No. '.htmlspecialchars($row['id']).'</span>
+                              <p><strong>Date:</strong> '.htmlspecialchars($row['date']).'</p>
+                              <p><strong>Payment Type:</strong> '.htmlspecialchars($row['payment_type']).'</p>
+							  <p><strong>Address: </strong>'.htmlspecialchars($row['address']).'</p>							  
+                              <p><strong>Status:</strong> '.($status=='Paused' ? 'Paused <a  data-position="bottom" data-delay="50" data-tooltip="Please contact administrator for further details." class="btn-floating waves-effect waves-light tooltipped cyan">    ?</a>' : htmlspecialchars($status)).'</p>							  
+							  '.(!empty($row['description']) ? '<p><strong>Note: </strong>'.htmlspecialchars($row['description']).'</p>' : '').'						                               
 							  <a href="#" class="secondary-content"><i class="mdi-action-grade"></i></a>
                               </li>';
 						$order_id = $row['id'];
-						$sql1 = mysqli_query($con, "SELECT * FROM order_details WHERE order_id = $order_id;");
-						while($row1 = mysqli_fetch_array($sql1))
+						$stmt_details = $con->prepare("SELECT * FROM order_details WHERE order_id = ?");
+						$stmt_details->bind_param("i", $order_id);
+						$stmt_details->execute();
+						$sql1 = $stmt_details->get_result();
+						while($row1 = $sql1->fetch_array())
 						{
 							$item_id = $row1['item_id'];
-							$sql2 = mysqli_query($con, "SELECT * FROM items WHERE id = $item_id;");
-							while($row2 = mysqli_fetch_array($sql2)){
+							$stmt_items = $con->prepare("SELECT * FROM items WHERE id = ?");
+							$stmt_items->bind_param("i", $item_id);
+							$stmt_items->execute();
+							$sql2 = $stmt_items->get_result();
+							while($row2 = $sql2->fetch_array()){
 								$item_name = $row2['name'];
 							}
 							echo '<li class="collection-item">
                             <div class="row">
                             <div class="col s7">
-                            <p class="collections-title"><strong>#'.$row1['item_id'].'</strong> '.$item_name.'</p>
+                            <p class="collections-title"><strong>#'.htmlspecialchars($row1['item_id']).'</strong> '.htmlspecialchars($item_name).'</p>
                             </div>
                             <div class="col s2">
-                            <span>'.$row1['quantity'].' Pieces</span>
+                            <span>'.htmlspecialchars($row1['quantity']).' Pieces</span>
                             </div>
                             <div class="col s3">
-                            <span>Rs. '.$row1['price'].'</span>
+                            <span>Rs. '.htmlspecialchars($row1['price']).'</span>
                             </div>
                             </div>
                             </li>';
 							$id = $row1['order_id'];
+							$stmt_items->close();
 						}
 								echo'<li class="collection-item">
                                         <div class="row">
@@ -228,17 +244,17 @@ include 'includes/wallet.php';
                                                 <p class="collections-title"> Total</p>
                                             </div>
                                             <div class="col s2">
-											<span> </span>
+											<span> </span>
                                             </div>
                                             <div class="col s3">
-                                                <span><strong>Rs. '.$row['total'].'</strong></span>
+                                                <span><strong>Rs. '.htmlspecialchars($row['total']).'</strong></span>
                                             </div>';
 								if(!preg_match('/^Cancelled/', $status)){
 									if($status != 'Delivered'){
 								echo '<form action="routers/cancel-order.php" method="post">
-										<input type="hidden" value="'.$id.'" name="id">
+										<input type="hidden" value="'.htmlspecialchars($id).'" name="id">
 										<input type="hidden" value="Cancelled by Customer" name="status">	
-										<input type="hidden" value="'.$row['payment_type'].'" name="payment_type">											
+										<input type="hidden" value="'.htmlspecialchars($row['payment_type']).'" name="payment_type">											
 										<button class="btn waves-effect waves-light right submit" type="submit" name="action">Cancel Order
                                               <i class="mdi-content-clear right"></i> 
 										</button>
@@ -246,8 +262,9 @@ include 'includes/wallet.php';
 								}
 								}
 								echo'</div></li>';
-
+						$stmt_details->close();
 					}
+					$stmt_orders->close();
 					?>
 					 </ul>
                 </div>

@@ -102,14 +102,17 @@ include 'includes/connect.php';
 									"><a href="all-orders.php">All Orders</a>
                                 </li>
 								<?php
-									$sql = mysqli_query($con, "SELECT DISTINCT status FROM orders;");
+									$stmt = $con->prepare("SELECT DISTINCT status FROM orders");
+									$stmt->execute();
+									$sql = $stmt->get_result();
 									while($row = mysqli_fetch_array($sql)){
 									if(isset($_GET['status'])){
 										$status = $row['status'];
 									}
-                                    echo '<li class='.(isset($_GET['status'])?($status == $_GET['status'] ? 'active' : ''): '').'><a href="all-orders.php?status='.$row['status'].'">'.$row['status'].'</a>
+                                    echo '<li class='.(isset($_GET['status'])?($status == $_GET['status'] ? 'active' : ''): '').'><a href="all-orders.php?status='.urlencode($row['status']).'">'.$row['status'].'</a>
                                     </li>';
 									}
+									$stmt->close();
 									?>
                                 </ul>
                             </div>
@@ -124,11 +127,14 @@ include 'includes/connect.php';
 								<li><a href="all-tickets.php">All Tickets</a>
                                 </li>
 								<?php
-									$sql = mysqli_query($con, "SELECT DISTINCT status FROM tickets;");
-									while($row = mysqli_fetch_array($sql)){
-                                    echo '<li><a href="all-tickets.php?status='.$row['status'].'">'.$row['status'].'</a>
+									$stmt_tkt = $con->prepare("SELECT DISTINCT status FROM tickets");
+									$stmt_tkt->execute();
+									$sql_tkt = $stmt_tkt->get_result();
+									while($row = mysqli_fetch_array($sql_tkt)){
+                                    echo '<li><a href="all-tickets.php?status='.urlencode($row['status']).'">'.$row['status'].'</a>
                                     </li>';
 									}
+									$stmt_tkt->close();
 									?>
                                 </ul>
                             </div>
@@ -174,66 +180,82 @@ include 'includes/connect.php';
 					else{
 						$status = '%';
 					}
-					$sql = mysqli_query($con, "SELECT * FROM orders WHERE status LIKE '$status';");
+					$stmt_orders = $con->prepare("SELECT * FROM orders WHERE status LIKE ?");
+					$stmt_orders->bind_param("s", $status);
+					$stmt_orders->execute();
+					$sql = $stmt_orders->get_result();
 					echo '<div class="row">
                 <div>
                     <h4 class="header">List</h4>
                     <ul id="issues-collection" class="collection">';
-					while($row = mysqli_fetch_array($sql))
+					while($row = $sql->fetch_array())
 					{
-						$status = $row['status'];
+						$order_status = $row['status'];
 						$deleted = $row['deleted'];
 						echo '<li class="collection-item avatar">
                               <i class="mdi-content-content-paste red circle"></i>
-                              <span class="collection-header">Order No. '.$row['id'].'</span>
-                              <p><strong>Date:</strong> '.$row['date'].'</p>
-                              <p><strong>Payment Type:</strong> '.$row['payment_type'].'</p>							  
-							  <p><strong>Status:</strong> '.($deleted ? $status : '
+                              <span class="collection-header">Order No. '.htmlspecialchars($row['id']).'</span>
+                              <p><strong>Date:</strong> '.htmlspecialchars($row['date']).'</p>
+                              <p><strong>Payment Type:</strong> '.htmlspecialchars($row['payment_type']).'</p>							  
+							  <p><strong>Status:</strong> '.($deleted ? htmlspecialchars($order_status) : '
 							  <form method="post" action="routers/edit-orders.php">
-							    <input type="hidden" value="'.$row['id'].'" name="id">
+							    <input type="hidden" value="'.htmlspecialchars($row['id']).'" name="id">
 								<select name="status">
-								<option value="Yet to be delivered" '.($status=='Yet to be delivered' ? 'selected' : '').'>Yet to be delivered</option>
-								<option value="Delivered" '.($status=='Delivered' ? 'selected' : '').'>Delivered</option>
-								<option value="Cancelled by Admin" '.($status=='Cancelled by Admin' ? 'selected' : '').'>Cancelled by Admin</option>
-								<option value="Paused" '.($status=='Paused' ? 'selected' : '').'>Paused</option>								
+								<option value="Yet to be delivered" '.($order_status=='Yet to be delivered' ? 'selected' : '').'>Yet to be delivered</option>
+								<option value="Delivered" '.($order_status=='Delivered' ? 'selected' : '').'>Delivered</option>
+								<option value="Cancelled by Admin" '.($order_status=='Cancelled by Admin' ? 'selected' : '').'>Cancelled by Admin</option>
+								<option value="Paused" '.($order_status=='Paused' ? 'selected' : '').'>Paused</option>								
 								</select>
 							  ').'</p>
                               <a href="#" class="secondary-content"><i class="mdi-action-grade"></i></a>
                               </li>';
 						$order_id = $row['id'];
 						$customer_id = $row['customer_id'];
-						$sql1 = mysqli_query($con, "SELECT * FROM order_details WHERE order_id = $order_id;");
-						$sql3 = mysqli_query($con, "SELECT * FROM users WHERE id = $customer_id;");
-							while($row3 = mysqli_fetch_array($sql3))
+						
+						$stmt_details = $con->prepare("SELECT * FROM order_details WHERE order_id = ?");
+						$stmt_details->bind_param("i", $order_id);
+						$stmt_details->execute();
+						$sql1 = $stmt_details->get_result();
+						
+						$stmt_user = $con->prepare("SELECT * FROM users WHERE id = ?");
+						$stmt_user->bind_param("i", $customer_id);
+						$stmt_user->execute();
+						$sql3 = $stmt_user->get_result();
+						
+							while($row3 = $sql3->fetch_array())
 							{
 							echo '<li class="collection-item">
                             <div class="row">
-							<p><strong>Name: </strong>'.$row3['name'].'</p>
-							<p><strong>Address: </strong>'.$row['address'].'</p>
-							'.($row3['contact'] == '' ? '' : '<p><strong>Contact: </strong>'.$row3['contact'].'</p>').'	
-							'.($row3['email'] == '' ? '' : '<p><strong>Email: </strong>'.$row3['email'].'</p>').'		
-							'.(!empty($row['description']) ? '<p><strong>Note: </strong>'.$row['description'].'</p>' : '').'								
+							<p><strong>Name: </strong>'.htmlspecialchars($row3['name']).'</p>
+							<p><strong>Address: </strong>'.htmlspecialchars($row['address']).'</p>
+							'.($row3['contact'] == '' ? '' : '<p><strong>Contact: </strong>'.htmlspecialchars($row3['contact']).'</p>').'	
+							'.($row3['email'] == '' ? '' : '<p><strong>Email: </strong>'.htmlspecialchars($row3['email']).'</p>').'		
+							'.(!empty($row['description']) ? '<p><strong>Note: </strong>'.htmlspecialchars($row['description']).'</p>' : '').'								
                             </li>';							
 							}
-						while($row1 = mysqli_fetch_array($sql1))
+						while($row1 = $sql1->fetch_array())
 						{
 							$item_id = $row1['item_id'];
-							$sql2 = mysqli_query($con, "SELECT * FROM items WHERE id = $item_id;");
-							while($row2 = mysqli_fetch_array($sql2))
+							$stmt_items = $con->prepare("SELECT * FROM items WHERE id = ?");
+							$stmt_items->bind_param("i", $item_id);
+							$stmt_items->execute();
+							$sql2 = $stmt_items->get_result();
+							while($row2 = $sql2->fetch_array())
 								$item_name = $row2['name'];
 							echo '<li class="collection-item">
                             <div class="row">
                             <div class="col s7">
-                            <p class="collections-title"><strong>#'.$row1['item_id'].'</strong> '.$item_name.'</p>
+                            <p class="collections-title"><strong>#'.htmlspecialchars($row1['item_id']).'</strong> '.htmlspecialchars($item_name).'</p>
                             </div>
                             <div class="col s2">
-                            <span>'.$row1['quantity'].' Pieces</span>
+                            <span>'.htmlspecialchars($row1['quantity']).' Pieces</span>
                             </div>
                             <div class="col s3">
-                            <span>Rs. '.$row1['price'].'</span>
+                            <span>Rs. '.htmlspecialchars($row1['price']).'</span>
                             </div>
                             </div>
                             </li>';
+							$stmt_items->close();
 						}
 								echo'<li class="collection-item">
                                         <div class="row">
@@ -241,10 +263,10 @@ include 'includes/connect.php';
                                                 <p class="collections-title"> Total</p>
                                             </div>
                                             <div class="col s2">
-											<span> </span>
+											<span> </span>
                                             </div>
                                             <div class="col s3">
-                                                <span><strong>Rs. '.$row['total'].'</strong></span>
+                                                <span><strong>Rs. '.htmlspecialchars($row['total']).'</strong></span>
                                             </div>';										
 								if(!$deleted){
 								echo '<button class="btn waves-effect waves-light right submit" type="submit" name="action">Change Status
@@ -253,7 +275,10 @@ include 'includes/connect.php';
 										</form>';
 								}
 								echo'</div></li>';
+						$stmt_details->close();
+						$stmt_user->close();
 					}
+					$stmt_orders->close();
 					?>
 					</ul>
                 </div>

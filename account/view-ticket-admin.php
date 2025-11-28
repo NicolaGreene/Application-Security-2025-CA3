@@ -5,9 +5,12 @@ $continue=0;
 if($_SESSION['admin_sid']==session_id())
 {
 		$ticket_id = $_GET['id'];
-		$sql1 = "SELECT * FROM tickets WHERE id = $ticket_id;";
-		if(mysqli_num_rows(mysqli_query($con,$sql1))>0){
-			$row  = $con->query($sql1)->fetch_assoc();
+		$stmt1 = $con->prepare("SELECT * FROM tickets WHERE id = ?");
+		$stmt1->bind_param("i", $ticket_id);
+		$stmt1->execute();
+		$result1 = $stmt1->get_result();
+		if($result1->num_rows > 0){
+			$row  = $result1->fetch_assoc();
 			$type = $row['type'];
 			$subject = $row['subject'];
 			$description = $row['description'];
@@ -226,14 +229,14 @@ if($continue){
 								echo '<ul id="task-card" class="collection with-header">
 									<div id="card-alert" class="card cyan">
 										<div class="card-content white-text">
-										<span class="card-title white-text darken-1">Ticket No. '.$ticket_id.'</span>
-										<p><strong>Subject: </strong>'.$subject.'</p>
-										<p><strong>Status: </strong>'.$status.'</p>	
-										<p><strong>Type: </strong>'.$type.'</p>											
+										<span class="card-title white-text darken-1">Ticket No. '.htmlspecialchars($ticket_id).'</span>
+										<p><strong>Subject: </strong>'.htmlspecialchars($subject).'</p>
+										<p><strong>Status: </strong>'.htmlspecialchars($status).'</p>	
+										<p><strong>Type: </strong>'.htmlspecialchars($type).'</p>											
 										</div>
 										<div class="card-action cyan">
 										<form method="post" action="routers/ticket-status.php">
-										<input type="hidden" name="ticket_id" value="'.$ticket_id.'">										
+										<input type="hidden" name="ticket_id" value="'.htmlspecialchars($ticket_id).'">									
 										<input type="hidden" name="status" value="'.($status != 'Closed' ? 'Closed' : 'Open').'">
 										<button class="waves-effect waves-light deep-orange btn white-text" type="submit" name="action">'
 										.($status != 'Closed' ? 'Close<i class="mdi-navigation-close"></i>' : 'Reopen<i class="mdi-navigation-check"></i>').'
@@ -243,28 +246,35 @@ if($continue){
 									</div>										
                                 </ul>';
 								echo '<ul id="issues-collection" class="collection">';
-								$sql1 = mysqli_query($con, "SELECT * from ticket_details WHERE ticket_id = $ticket_id;");
-								while($row1 = mysqli_fetch_array($sql1)){
-									$sql2 = "SELECT * FROM users WHERE id = ".$row1['user_id'].";";
-									if(mysqli_num_rows(mysqli_query($con,$sql2))>0){
-										$row2  = $con->query($sql2)->fetch_assoc();
-										$name = $row2['name'];
+								$stmt_details = $con->prepare("SELECT * FROM ticket_details WHERE ticket_id = ?");
+								$stmt_details->bind_param("i", $ticket_id);
+								$stmt_details->execute();
+								$result_details = $stmt_details->get_result();
+								while($row1 = $result_details->fetch_array()){
+									$stmt_user = $con->prepare("SELECT * FROM users WHERE id = ?");
+									$stmt_user->bind_param("i", $row1['user_id']);
+									$stmt_user->execute();
+									$result_user = $stmt_user->get_result();
+									if($result_user->num_rows > 0){
+										$row2  = $result_user->fetch_assoc();
+										$user_name = $row2['name'];
 										$role1 = $row2['role'];										
 									}
 								  echo '
 								  <li class="collection-item avatar">
 									  <i class="'.($role1=='Administrator' ? 'mdi-action-star-rate' : 'mdi-social-person').' cyan circle"></i>
-									  <span class="collection-header"> '.$name.'</span>
-									  <p><strong>Date:</strong> '.$row1['date'].'</p>
-									  <p><strong>Role:</strong> '.$role1.'</p>					                               
+									  <span class="collection-header"> '.htmlspecialchars($user_name).'</span>
+									  <p><strong>Date:</strong> '.htmlspecialchars($row1['date']).'</p>
+									  <p><strong>Role:</strong> '.htmlspecialchars($role1).'</p>					                               
 									  <a href="#" class="secondary-content">
 									  <i class="mdi-action-grade"></i></a>
 								  </li>
 								  <li class="collection-item">
 									  <div class="row">
-									  <p class="caption">'.$row1['description'].'</p>
+									  <p class="caption">'.htmlspecialchars($row1['description']).'</p>
 									  </div>
 									  </li>';
+									$stmt_user->close();
 								}
 							  echo '</ul>';
 							  if($status != 'Closed'){
@@ -273,8 +283,8 @@ if($continue){
                   <div class="row">
                     <form class="formValidate" id="formValidate" method="post" action="routers/ticket-message.php" novalidate="novalidate" class="col s12">					  
                       <div class="row">
-					  <input type="hidden" name="role" value="'.$role.'">
-					  <input type="hidden" name="ticket_id" value="'.$ticket_id.'">
+					  <input type="hidden" name="role" value="'.htmlspecialchars($role).'">
+					  <input type="hidden" name="ticket_id" value="'.htmlspecialchars($ticket_id).'">
                         <div class="input-field col s12">
                           <i class="mdi-action-home prefix"></i>
                           <textarea name="message" id="message" class="materialize-textarea validate" data-error=".errorTxt1"></textarea>
@@ -375,6 +385,7 @@ if($continue){
 
 </html>
 <?php
+	$stmt1->close();
 	}
 	else
 	{
