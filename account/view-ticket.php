@@ -164,11 +164,15 @@ if($continue){
 								<li><a href="orders.php">All Orders</a>
                                 </li>
 								<?php
-									$sql = mysqli_query($con, "SELECT DISTINCT status FROM orders WHERE customer_id = $user_id;");
+									$stmt_orders = $con->prepare("SELECT DISTINCT status FROM orders WHERE customer_id = ?");
+									$stmt_orders->bind_param("i", $user_id);
+									$stmt_orders->execute();
+									$sql = $stmt_orders->get_result();
 									while($row = mysqli_fetch_array($sql)){
-                                    echo '<li><a href="orders.php?status='.$row['status'].'">'.$row['status'].'</a>
+                                    echo '<li><a href="orders.php?status='.urlencode($row['status']).'">'.$row['status'].'</a>
                                     </li>';
 									}
+									$stmt_orders->close();
 									?>
                                 </ul>
                             </div>
@@ -183,11 +187,15 @@ if($continue){
 								<li><a href="tickets.php">All Tickets</a>
                                 </li>
 								<?php
-									$sql = mysqli_query($con, "SELECT DISTINCT status FROM tickets WHERE poster_id = $user_id;");
+									$stmt_tickets = $con->prepare("SELECT DISTINCT status FROM tickets WHERE poster_id = ? AND deleted = 0");
+									$stmt_tickets->bind_param("i", $user_id);
+									$stmt_tickets->execute();
+									$sql = $stmt_tickets->get_result();
 									while($row = mysqli_fetch_array($sql)){
-                                    echo '<li><a href="tickets.php?status='.$row['status'].'">'.$row['status'].'</a>
+                                    echo '<li><a href="tickets.php?status='.urlencode($row['status']).'">'.$row['status'].'</a>
                                     </li>';
 									}
+									$stmt_tickets->close();
 									?>
                                 </ul>
                             </div>

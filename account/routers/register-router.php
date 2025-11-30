@@ -2,16 +2,10 @@
 include '../includes/connect.php';
 $name = $_POST['name'];
 $username = $_POST['username'];
-$password = $_POST['password'];
+$password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 $phone = (int)$_POST['phone'];
-
-function number($length) {
-    $result = '';
-    for($i = 0; $i < $length; $i++) {
-        $result .= mt_rand(0, 9);
-    }
-    return $result;
-}
+// NEW: expect payment method token from Stripe (frontend collected card, sent token)
+$payment_method_token = isset($_POST['payment_method_token']) ? $_POST['payment_method_token'] : null;
 
 $stmt = $con->prepare("INSERT INTO users (name, username, password, contact) VALUES (?, ?, ?, ?)");
 $stmt->bind_param("sssi", $name, $username, $password, $phone);
@@ -25,10 +19,10 @@ if($stmt->execute()){
 		$wallet_id = $con->insert_id;
 		$stmt->close();
 		
-		$cc_number = number(16);
-		$cvv_number = number(3);
-		$stmt = $con->prepare("INSERT INTO wallet_details(wallet_id, number, cvv) VALUES (?, ?, ?)");
-		$stmt->bind_param("iss", $wallet_id, $cc_number, $cvv_number);
+		//tokenised credit card storage with default balance of 200
+		$default_balance = 200;
+		$stmt = $con->prepare("INSERT INTO wallet_details(wallet_id, balance, payment_method_token) VALUES (?, ?, ?)");
+		$stmt->bind_param("iis", $wallet_id, $default_balance, $payment_method_token);
 		$stmt->execute();
 		$stmt->close();
 	}

@@ -14,5 +14,6 @@ $stmt->execute();
 $res = $stmt->get_result();
 $row1 = $res->fetch_assoc();
 $balance = $row1['balance'];
+$payment_method_token = $row1['payment_method_token'];
 $stmt->close();
 ?>

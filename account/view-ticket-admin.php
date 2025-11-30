@@ -4,7 +4,7 @@ include 'includes/wallet.php';
 $continue=0;
 if($_SESSION['admin_sid']==session_id())
 {
-		$ticket_id = $_GET['id'];
+		$ticket_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 		$stmt1 = $con->prepare("SELECT * FROM tickets WHERE id = ?");
 		$stmt1->bind_param("i", $ticket_id);
 		$stmt1->execute();
@@ -20,6 +20,7 @@ if($_SESSION['admin_sid']==session_id())
 		}
 		else
 			$continue = 0;	
+		$stmt1->close();
 }
 
 if($continue){
@@ -164,11 +165,14 @@ if($continue){
 								<li><a href="all-orders.php">All Orders</a>
                                 </li>
 								<?php
-									$sql = mysqli_query($con, "SELECT DISTINCT status FROM orders;");
+									$stmt = $con->prepare("SELECT DISTINCT status FROM orders");
+									$stmt->execute();
+									$sql = $stmt->get_result();
 									while($row = mysqli_fetch_array($sql)){
-                                    echo '<li><a href="all-orders.php?status='.$row['status'].'">'.$row['status'].'</a>
+                                    echo '<li><a href="all-orders.php?status='.urlencode($row['status']).'">'.$row['status'].'</a>
                                     </li>';
 									}
+									$stmt->close();
 									?>
                                 </ul>
                             </div>
@@ -183,11 +187,14 @@ if($continue){
 								<li><a href="all-tickets.php">All Tickets</a>
                                 </li>
 								<?php
-									$sql = mysqli_query($con, "SELECT DISTINCT status FROM tickets;");
+									$stmt = $con->prepare("SELECT DISTINCT status FROM tickets");
+									$stmt->execute();
+									$sql = $stmt->get_result();
 									while($row = mysqli_fetch_array($sql)){
-                                    echo '<li><a href="all-tickets.php?status='.$row['status'].'">'.$row['status'].'</a>
+                                    echo '<li><a href="all-tickets.php?status='.urlencode($row['status']).'">'.$row['status'].'</a>
                                     </li>';
 									}
+									$stmt->close();
 									?>
                                 </ul>
                             </div>
@@ -385,7 +392,6 @@ if($continue){
 
 </html>
 <?php
-	$stmt1->close();
 	}
 	else
 	{

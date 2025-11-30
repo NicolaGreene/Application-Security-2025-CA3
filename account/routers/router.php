@@ -5,16 +5,18 @@ $success=false;
 $username = $_POST['username'];
 $password = $_POST['password'];
 
-$stmt = $con->prepare("SELECT * FROM users WHERE username = ? AND password = ? AND role = 'Administrator' AND deleted = 0");
-$stmt->bind_param("ss", $username, $password);
+$stmt = $con->prepare("SELECT * FROM users WHERE username = ? AND role = 'Administrator' AND deleted = 0");
+$stmt->bind_param("s", $username);
 $stmt->execute();
 $result = $stmt->get_result();
 while($row = mysqli_fetch_array($result))
 {
-	$success = true;
-	$user_id = $row['id'];
-	$name = $row['name'];
-	$role= $row['role'];
+	if(password_verify($password, $row['password'])){
+		$success = true;
+		$user_id = $row['id'];
+		$name = $row['name'];
+		$role= $row['role'];
+	}
 }
 $stmt->close();
 
@@ -30,16 +32,18 @@ if($success == true)
 }
 else
 {
-	$stmt = $con->prepare("SELECT * FROM users WHERE username = ? AND password = ? AND role = 'Customer' AND deleted = 0");
-	$stmt->bind_param("ss", $username, $password);
+	$stmt = $con->prepare("SELECT * FROM users WHERE username = ? AND role = 'Customer' AND deleted = 0");
+	$stmt->bind_param("s", $username);
 	$stmt->execute();
 	$result = $stmt->get_result();
 	while($row = mysqli_fetch_array($result))
 	{
-		$success = true;
-		$user_id = $row['id'];
-		$name = $row['name'];
-		$role= $row['role'];
+		if(password_verify($password, $row['password'])){
+			$success = true;
+			$user_id = $row['id'];
+			$name = $row['name'];
+			$role= $row['role'];
+		}
 	}
 	$stmt->close();
 	

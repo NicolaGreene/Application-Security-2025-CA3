@@ -4,7 +4,7 @@ $user_id = $_SESSION['user_id'];
 
 $name = $_POST['name'];
 $username = $_POST['username'];
-$password = $_POST['password'];
+$password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 $phone = (int)$_POST['phone'];
 $email = $_POST['email'];
 $address = $_POST['address'];
