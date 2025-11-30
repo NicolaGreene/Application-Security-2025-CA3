@@ -3,12 +3,12 @@ include '../includes/connect.php';
 include '../includes/wallet.php';
 $total = 0;
 $address = $_POST['address'];
-$description = $_POST['description'];
+$description = $_POST['description'] ?? '';
 $payment_type = $_POST['payment_type'];
-$total = (int)$_POST['total'];
+$total = (int)($_POST['total'] ?? 0);
 
 $stmt = $con->prepare("INSERT INTO orders (customer_id, payment_type, address, total, description) VALUES (?, ?, ?, ?, ?)");
-$stmt->bind_param("isisi", $user_id, $payment_type, $address, $total, $description);
+$stmt->bind_param("isssi", $user_id, $payment_type, $address, $total, $description);
 if ($stmt->execute()){
 	$order_id = $con->insert_id;
 	$stmt->close();

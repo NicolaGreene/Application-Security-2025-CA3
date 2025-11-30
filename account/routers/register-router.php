@@ -20,7 +20,7 @@ if($stmt->execute()){
 		$stmt->close();
 		
 		//tokenised credit card storage with default balance of 200
-		$default_balance = 200;
+		$default_balance = 2000;
 		$stmt = $con->prepare("INSERT INTO wallet_details(wallet_id, balance, payment_method_token) VALUES (?, ?, ?)");
 		$stmt->bind_param("iis", $wallet_id, $default_balance, $payment_method_token);
 		$stmt->execute();
