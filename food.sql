@@ -229,6 +229,7 @@ CREATE TABLE `wallet_details` (
   `id` int(11) NOT NULL,
   `wallet_id` int(11) NOT NULL,
   `payment_method_token` varchar(255),
+  `balance` int(11) NOT NULL DEFAULT `2000`
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
