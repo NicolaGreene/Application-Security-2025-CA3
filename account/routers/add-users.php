@@ -12,7 +12,7 @@ function number($length) {
 }
 
 $username = $_POST['username'];
-//password is not hashed before being stored
+//password is hashed before being stored
 $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 $name = $_POST['name'];
 $email = $_POST['email'];

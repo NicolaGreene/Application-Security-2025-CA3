@@ -174,7 +174,7 @@ CREATE TABLE `users` (
   `role` varchar(15) NOT NULL DEFAULT 'Customer',
   `name` varchar(15) NOT NULL,
   `username` varchar(100) NOT NULL,
-  `password` varchar(16) NOT NULL,
+  `password` varchar(255) NOT NULL,
   `email` varchar(35) DEFAULT NULL,
   `address` varchar(300) DEFAULT NULL,
   `contact` bigint(11) NOT NULL,
@@ -228,8 +228,7 @@ INSERT INTO `wallet` (`id`, `customer_id`) VALUES
 CREATE TABLE `wallet_details` (
   `id` int(11) NOT NULL,
   `wallet_id` int(11) NOT NULL,
-  `number` varchar(16) NOT NULL,
-  `cvv` int(3) NOT NULL,
+  'payment_method_token' varchar(255) NOT NULL,
   `balance` int(11) NOT NULL DEFAULT '2000'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
