@@ -228,22 +228,21 @@ INSERT INTO `wallet` (`id`, `customer_id`) VALUES
 CREATE TABLE `wallet_details` (
   `id` int(11) NOT NULL,
   `wallet_id` int(11) NOT NULL,
-  'payment_method_token' varchar(255) NOT NULL,
-  `balance` int(11) NOT NULL DEFAULT '2000'
+  `payment_method_token` varchar(255),
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `wallet_details`
 --
 
-INSERT INTO `wallet_details` (`id`, `wallet_id`, `number`, `cvv`, `balance`) VALUES
-(1, 1, '6155247490533921', 983, 3430),
-(2, 2, '1887587142382050', 772, 1850),
-(3, 3, '4595809639046830', 532, 1585),
-(4, 4, '5475856443351234', 521, 2000),
-(5, 5, '9076633115663264', 229, 2000),
-(6, 6, '5647187738843860', 768, 2000),
-(7, 7, '2514747678902921', 631, 2000);
+INSERT INTO `wallet_details` (`id`, `wallet_id`, `balance`) VALUES
+(1, 1, 3430),
+(2, 2, 1850),
+(3, 3,1585),
+(4, 4, 2000),
+(5, 5, 2000),
+(6, 6, 2000),
+(7, 7, 2000);
 
 --
 -- Indexes for dumped tables
