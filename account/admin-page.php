@@ -260,15 +260,16 @@ include 'includes/connect.php';
 				<?php
 				
 					echo '<tr><td><div class="input-field col s12"><label for="name">Name</label>';
-					echo '<input id="name" name="name" type="text" data-error=".errorTxt01"><div class="errorTxt01"></div></td>';					
+					echo '<input id="name" name="name" type="text" required data-error=".errorTxt01"><div class="errorTxt01"></div></td>';					
 					echo '<td><div class="input-field col s12 "><label for="price" class="">Price</label>';
-					echo '<input id="price" name="price" type="text" data-error=".errorTxt02"><div class="errorTxt02"></div></td>';
+					echo '<input id="price" name="price" type="text" required data-error=".errorTxt02"><div class="errorTxt02"></div></td>';
 
 					echo '<td><div class="input-field col s12 ">';
-					echo '
-					<input type="file" id="image" name="image" data-error=".errorTxt01"><div class="errorTxt01"></div></td>';                   
-					echo '<td></tr>';
-				?>
+          echo '<input type="file" id="image" name="image" accept="image/*" required data-error=".errorTxt03">';
+          echo '<br><br><div class="errorTxt03"></div></div></td>';
+          echo '</tr>';  
+
+           ?> 
                     </tbody>
 </table>
               </div>
