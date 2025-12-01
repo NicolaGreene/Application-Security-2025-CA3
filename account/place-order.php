@@ -267,7 +267,7 @@ $verified = $row['verified'];
 							if($key == 'action' || $value == ''){
 								break;
 							}
-							echo '<input name="'.$key.'" type="hidden" value="'.$value.'">';
+							echo '<input name="'.htmlspecialchars($key).'" type="hidden" value="'.htmlspecialchars($value).'">';
 						}
 					  ?>
                     </form>
@@ -313,13 +313,13 @@ $verified = $row['verified'];
 			    echo '<li class="collection-item">
         <div class="row">
             <div class="col s7">
-                <p class="collections-title"><strong>#'.$item_id.' </strong>'.$item_name.'</p>
+                <p class="collections-title"><strong>#'.htmlspecialchars($item_id).' </strong>'.htmlspecialchars($item_name).'</p>
             </div>
             <div class="col s2">
-                <span>'.$value.' Pieces</span>
+                <span>'.htmlspecialchars($value).' Pieces</span>
             </div>
             <div class="col s3">
-                <span>Rs. '.$price.'</span>
+                <span>Rs. '.htmlspecialchars($price).'</span>
             </div>
         </div>
     </li>';

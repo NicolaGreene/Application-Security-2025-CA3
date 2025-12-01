@@ -271,7 +271,7 @@ jQuery(function($) {'use strict';
                     $('#btn_order_submit').val('Place Order');
 				}
 
-				$("#result").hide().html(output).slideDown();
+				$("#result").hide().text(output).slideDown();
             }, 'json');
 
         }
@@ -336,7 +336,7 @@ jQuery(function($) {'use strict';
 					$('#btn_contact_submit').val('Submit Request');
 				}
 
-				$("#result").hide().html(output).slideDown();
+				$("#result").hide().text(output).slideDown();
             }, 'json');
 
         }

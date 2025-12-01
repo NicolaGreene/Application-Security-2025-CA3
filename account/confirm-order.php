@@ -197,11 +197,13 @@ if($continue){
 <?php
     echo '<li class="collection-item avatar">
         <i class="mdi-content-content-paste red circle"></i>
-        <p><strong>Name:</strong>'.$name.'</p>
-		<p><strong>Contact Number:</strong> '.$contact.'</p>
-		<p><strong>Address:</strong> '.htmlspecialchars($_POST['address']).'</p>	
-		<p><strong>Payment Type:</strong> '.$_POST['payment_type'].'</p>			
-        <a href="#" class="secondary-content"><i class="mdi-action-grade"></i></a>';
+        <p><strong>Name:</strong> ' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '</p>
+        <p><strong>Contact Number:</strong> ' . htmlspecialchars($contact, ENT_QUOTES, 'UTF-8') . '</p>
+        <p><strong>Address:</strong> ' . htmlspecialchars($_POST['address'], ENT_QUOTES, 'UTF-8') . '</p>
+        <p><strong>Payment Type:</strong> ' . htmlspecialchars($_POST['payment_type'], ENT_QUOTES, 'UTF-8') . '</p>
+        <a href="#" class="secondary-content"><i class="mdi-action-grade"></i></a>
+      </li>';
+
 		
 	foreach ($_POST as $key => $value)
 	{
@@ -217,16 +219,20 @@ if($continue){
 			    echo '<li class="collection-item">
         <div class="row">
             <div class="col s7">
-                <p class="collections-title"><strong>#'.$item_id.' </strong>'.$item_name.'</p>
+                <p class="collections-title">
+                    <strong>#'.htmlspecialchars($item_id, ENT_QUOTES, 'UTF-8').' </strong>' 
+                    .htmlspecialchars($item_name, ENT_QUOTES, 'UTF-8').'
+                </p>
             </div>
             <div class="col s2">
-                <span>'.$value.' Pieces</span>
+                <span>'.htmlspecialchars($value, ENT_QUOTES, 'UTF-8').' Pieces</span>
             </div>
             <div class="col s3">
-                <span>Rs. '.$price.'</span>
+                <span>Rs. '.htmlspecialchars($price, ENT_QUOTES, 'UTF-8').'</span>
             </div>
         </div>
     </li>';
+
 		$total = $total + $price;
 	}
 	}
@@ -264,11 +270,11 @@ if($continue){
 foreach ($_POST as $key => $value)
 {
 	if(is_numeric($key)){
-		echo '<input type="hidden" name="'.$key.'" value="'.$value.'">';
+		echo '<input type="hidden" name="'.htmlspecialchars($key).'" value="'.htmlspecialchars($value).'">';
 	}
 }
 ?>
-<input type="hidden" name="payment_type" value="<?php echo $_POST['payment_type'];?>">
+<input type="hidden" name="payment_type" value="<?php echo htmlspecialchars($_POST['payment_type']);?>">
 <input type="hidden" name="address" value="<?php echo htmlspecialchars($_POST['address']);?>">
 <?php if (isset($_POST['description'])) { echo'<input type="hidden" name="description" value="'.htmlspecialchars($_POST['description']).'">';}?>
 <?php if($_POST['payment_type'] == 'Wallet') echo '<input type="hidden" name="balance" value="<?php echo ($balance-$total);?>">'; ?>
