@@ -2,6 +2,15 @@
 include '../includes/connect.php';
 $success=false;
 
+
+function login_log($username, $status){
+	$logfile = __DIR__ . '/../../logs/login.txt';
+	$timestamp = date("Y-m-d H:i:s");
+
+	$logEntry = "[$timestamp] USERNAME: $username | STATUS: $status" . PHP_EOL;
+	file_put_contents($logfile, $logEntry, FILE_APPEND);
+}
+
 $username = $_POST['username'];
 $password = $_POST['password'];
 
@@ -22,6 +31,8 @@ $stmt->close();
 
 if($success == true)
 {	
+	login_log($username, "ADMIN LOGIN SUCCESS");
+
 	session_start();
 	$_SESSION['admin_sid']=session_id();
 	$_SESSION['user_id'] = $user_id;
@@ -32,6 +43,9 @@ if($success == true)
 }
 else
 {
+	if($username == "admin"){
+		login_log($username, "ADMIN LOGIN FAILED");
+	}
 	$stmt = $con->prepare("SELECT * FROM users WHERE username = ? AND role = 'Customer' AND deleted = 0");
 	$stmt->bind_param("s", $username);
 	$stmt->execute();
@@ -49,6 +63,8 @@ else
 	
 	if($success == true)
 	{
+		login_log($username, "CUSTOMER LOGIN SUCCESS");
+
 		session_start();
 		$_SESSION['customer_sid']=session_id();
 		$_SESSION['user_id'] = $user_id;
@@ -58,6 +74,9 @@ else
 	}
 	else
 	{
+		if($username != "admin"){
+			login_log($username, "CUSTOMER LOGIN FAILED");
+		}
 		header("location: ../login.php");
 	}
 }
