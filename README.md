@@ -1,8 +1,11 @@
 
 **Admin Creds:** <br/>
 Admin Login & Password (You can change this in phpmyadmin):<br/>
-Login: admin <br>
-Password: Demopass@123<br>
+Login: Jesus <br>
+Password: password<br>
+**User Creds:** <br/>
+Login: maria <br>
+Password: mariapass <br>
 
 ## Installation
 <ol>
